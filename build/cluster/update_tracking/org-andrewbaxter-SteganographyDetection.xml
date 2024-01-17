@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?><module codename="org.andrewbaxter.SteganographyDetection">
-    <module_version install_time="1705505818168" last="true" origin="installer" specification_version="1.0">
+    <module_version install_time="1705519976561" last="true" origin="installer" specification_version="1.0">
         <file crc="2289007263" name="config/Modules/org-andrewbaxter-SteganographyDetection.xml"/>
         <file crc="37397456" name="modules/org-andrewbaxter-SteganographyDetection.jar"/>
     </module_version>

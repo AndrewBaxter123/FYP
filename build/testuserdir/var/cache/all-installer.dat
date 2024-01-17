@@ -1,4 +1,4 @@
-#Wed Jan 17 15:43:02 GMT 2024
+#Wed Jan 17 19:41:58 GMT 2024
 org.netbeans.core.startup.OpenIDE-Module-Deprecated=\u0000
 org.netbeans.modules.nbjunit.OpenIDE-Module-Hide-Classpath-Packages=\u0000
 org.netbeans.modules.settings.AutoUpdate-Show-In-Client=false
@@ -230,8 +230,8 @@ org.netbeans.modules.masterfs.nio2.OpenIDE-Module-Hide-Classpath-Packages=\u0000
 org.netbeans.libs.javacapi.AutoUpdate-Show-In-Client=false
 org.sleuthkit.autopsy.imagegallery.OpenIDE-Module-Layer=org/sleuthkit/autopsy/imagegallery/layer.xml
 org.netbeans.insane.OpenIDE-Module-Hide-Classpath-Packages=\u0000
-org.sleuthkit.autopsy.core.AutoUpdate-Show-In-Client=true
 org.openide.filesystems.compat8.AutoUpdate-Show-In-Client=false
+org.sleuthkit.autopsy.core.AutoUpdate-Show-In-Client=true
 org.netbeans.insane.OpenIDE-Module-Layer=\u0000
 org.netbeans.api.visual.AutoUpdate-Show-In-Client=false
 org.netbeans.modules.masterfs.nio2.OpenIDE-Module-Deprecated=\u0000
@@ -456,13 +456,13 @@ org.sleuthkit.autopsy.thunderbirdparser.OpenIDE-Module-Layer=org/sleuthkit/autop
 org.sleuthkit.autopsy.thunderbirdparser.OpenIDE-Module-Install=\u0000
 org.netbeans.libs.junit4.OpenIDE-Module-Install=\u0000
 org.netbeans.core.startup.base.OpenIDE-Module-Deprecated=\u0000
-org.openide.execution.AutoUpdate-Show-In-Client=false
 org.netbeans.core.execution.AutoUpdate-Show-In-Client=false
+org.openide.execution.AutoUpdate-Show-In-Client=false
 org.netbeans.core.io.ui.OpenIDE-Module-Layer=org/netbeans/core/io/ui/layer.xml
 org.sleuthkit.autopsy.testing.OpenIDE-Module-Deprecated=\u0000
 org.openide.util.OpenIDE-Module-Deprecated=\u0000
-org.netbeans.modules.apisupport.harness.AutoUpdate-Show-In-Client=false
 org.netbeans.libs.jshell.compile.AutoUpdate-Show-In-Client=false
+org.netbeans.modules.apisupport.harness.AutoUpdate-Show-In-Client=false
 org.openide.filesystems.compat8.OpenIDE-Module-Layer=\u0000
 org.netbeans.modules.autoupdate.services.OpenIDE-Module-Hide-Classpath-Packages=\u0000
 org.netbeans.modules.masterfs.AutoUpdate-Show-In-Client=false

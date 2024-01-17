@@ -766,7 +766,7 @@ set found_it=1
  IF "!IS_RESTART!" == "0" goto done 
 ) 
 
-C:\Program Files\Autopsy-4.18.0\autopsy\solr>(IF NOT "21600" == "0" (IF "0.0.0.0:23232" == "0.0.0.0:23232" (
+C:\Program Files\Autopsy-4.18.0\autopsy\solr>(IF NOT "2712" == "0" (IF "0.0.0.0:23232" == "0.0.0.0:23232" (
 set found_it=1  
   
  IF "8079" == "" set /A STOP_PORT=23232 - 1000  
@@ -774,14 +774,14 @@ set found_it=1
  del "C:\Users\andre\AppData\Roaming\autopsy\var\log\solr"\solr-23232.port  
  timeout /T 5  
  REM Kill it if it is still running after the graceful shutdown  
- For /F "tokens=2,5" %j in ('netstat -nao | find "TCP " | find ":0 " | find ":23232 "') do (IF "21600" == "%k" (IF "%j" == "0.0.0.0:23232" (
+ For /F "tokens=2,5" %j in ('netstat -nao | find "TCP " | find ":0 " | find ":23232 "') do (IF "2712" == "%k" (IF "%j" == "0.0.0.0:23232" (
  
- taskkill /f /PID 21600 
+ taskkill /f /PID 2712 
 ) ) ) 
 ) ) ) 
-Stopping Solr process 21600 running on port 23232
+Stopping Solr process 2712 running on port 23232
 
-C:\Program Files\Autopsy-4.18.0\autopsy\solr>(IF NOT "21600" == "0" (IF "[::]:23232" == "0.0.0.0:23232" (
+C:\Program Files\Autopsy-4.18.0\autopsy\solr>(IF NOT "2712" == "0" (IF "[::]:23232" == "0.0.0.0:23232" (
 set found_it=1  
   
  IF "8079" == "" set /A STOP_PORT=23232 - 1000  
@@ -789,9 +789,9 @@ set found_it=1
  del "C:\Users\andre\AppData\Roaming\autopsy\var\log\solr"\solr-23232.port  
  timeout /T 5  
  REM Kill it if it is still running after the graceful shutdown  
- For /F "tokens=2,5" %j in ('netstat -nao | find "TCP " | find ":0 " | find ":23232 "') do (IF "21600" == "%k" (IF "%j" == "0.0.0.0:23232" (
+ For /F "tokens=2,5" %j in ('netstat -nao | find "TCP " | find ":0 " | find ":23232 "') do (IF "2712" == "%k" (IF "%j" == "0.0.0.0:23232" (
  
- taskkill /f /PID 21600 
+ taskkill /f /PID 2712 
 ) ) ) 
 ) ) ) 
 
