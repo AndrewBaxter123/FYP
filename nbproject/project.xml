@@ -42,6 +42,26 @@
                 </dependency>
             </module-dependencies>
             <public-packages/>
+            <class-path-extension>
+                <runtime-relative-path>ext/jfreechart-1.0.19-demo.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/jfreechart-1.0.19-demo.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/jcommon-1.0.23.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/jcommon-1.0.23.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/jfreechart-1.0.19-swt.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/jfreechart-1.0.19-swt.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/jfreechart-1.0.19.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/jfreechart-1.0.19.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/jfreechart-1.0.19-experimental.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/jfreechart-1.0.19-experimental.jar</binary-origin>
+            </class-path-extension>
         </data>
     </configuration>
 </project>
