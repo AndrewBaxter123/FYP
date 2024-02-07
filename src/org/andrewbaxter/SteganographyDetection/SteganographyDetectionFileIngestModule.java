@@ -82,26 +82,25 @@ public class SteganographyDetectionFileIngestModule implements FileIngestModule 
     
 @Override
 public void shutDown() {
-    // Use SimpleDateFormat to create a file-system friendly timestamp
     SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd_HHmmss");
     String timestamp = dateFormat.format(new Date());
 
-    // Construct the file path for the pie chart image and report
     String pieChartFileName = "pieChart_" + timestamp + ".png";
     String pieChartImagePath = Case.getCurrentCase().getExportDirectory() + File.separator + pieChartFileName;
 
-    String reportFileName = "SteganographyDetectionReport_" + timestamp + ".html"; // Use .html instead of .txt
+    String reportFileName = "SteganographyDetectionReport_" + timestamp + ".html";
     String reportPath = Case.getCurrentCase().getExportDirectory() + File.separator + reportFileName;
 
     try {
         generatePieChart(pieChartImagePath);
+        generateReport(reportPath, pieChartFileName); // Pass the filename to the generateReport method
     } catch (IOException ex) {
         Exceptions.printStackTrace(ex);
     }
 
-    generateReport(reportPath);
     logger.log(Level.INFO, "SteganographyDetectionFileIngestModule shutting down");
 }
+
 
 
     
@@ -227,7 +226,7 @@ private void sendIngestMessage(String title, String message) {
     ));
 }
 
-private void generateReport(String reportPath) {
+private void generateReport(String reportPath, String pieChartFileName) {
     // Change the file extension to .html
     File reportFile = new File(reportPath.replace(".txt", ".html"));
 
@@ -244,13 +243,13 @@ private void generateReport(String reportPath) {
 
         // Detailed list of suspected files
         writer.write("<h2>Detail</h2><ul>");
-        for (SuspectedFile file : suspectedFiles) { // Make sure you have a list called suspectedFiles containing details about suspected files
+        for (SuspectedFile file : suspectedFiles) {
             writer.write("<li>" + file.getFilePath() + " - Method: " + file.getDetectionMethod() + ", Confidence: " + file.getConfidenceLevel() + "</li>");
         }
         writer.write("</ul>");
 
         // Embedding the pie chart image (make sure the image path is accessible from where the HTML will be opened)
-        writer.write("<img src='pieChart.png' alt='Pie Chart'/>");
+        writer.write("<img src='" + pieChartFileName + "' alt='Pie Chart'/>");
 
         // End of the HTML document
         writer.write("</body></html>");
@@ -258,6 +257,8 @@ private void generateReport(String reportPath) {
         logger.log(Level.SEVERE, "Error generating HTML report", e);
     }
 }
+
+
 private void generatePieChart(String imagePath) throws IOException {
     // Create a dataset for the pie chart
     PieDataset dataset = createDataset();
@@ -320,11 +321,4 @@ private boolean detectSteganographyUsingDL(AbstractFile file) {
     return false;
 }
 
-}
-
-
-
-
-
-
-    
+}    
