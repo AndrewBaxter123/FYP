@@ -67,6 +67,8 @@ import org.jfree.chart.ChartUtilities; // Note: In newer versions, this might be
 import org.jfree.chart.JFreeChart;
 import org.jfree.data.general.DefaultPieDataset;
 import org.jfree.data.general.PieDataset;
+import java.io.BufferedReader;
+
 
 
 public class SteganographyDetectionFileIngestModule implements FileIngestModule {
@@ -100,7 +102,7 @@ public class SteganographyDetectionFileIngestModule implements FileIngestModule 
         logger.log(Level.INFO, "SteganographyDetectionFileIngestModule shutting down");
     }
 
-    @Override
+@Override
 public ProcessResult process(AbstractFile file) {
     List<String> supportedExtensions = Arrays.asList(".png", ".jpg", ".jpeg", ".dng", ".pgm", ".bmp", ".gif");
     String fileName = file.getName().toLowerCase();
@@ -119,12 +121,20 @@ public ProcessResult process(AbstractFile file) {
 
         if (isSuspected) {
             suspectedFilesCount++;  // Increment if steganography is suspected
+            suspectedFiles.add(new SuspectedFile(file.getLocalAbsPath(), "Detection Method: SVM"));
             sendIngestMessage(file, isSuspected); // Send detailed message if steganography is detected
+            try {
+                tagFile(file, "Suspected Steganography"); // Tag the file as suspected steganography
+                addArtifactToBlackboard(file); // Add a comment to the blackboard
+            } catch (TagsManager.TagNameAlreadyExistsException e) {
+                logger.log(Level.SEVERE, "Error tagging file", e);
+            }
         }
     }
 
     return ProcessResult.OK;
 }
+
 
 
     private void addArtifactToBlackboard(AbstractFile file) {
@@ -167,26 +177,38 @@ public ProcessResult process(AbstractFile file) {
 
 
     private void generateReport(String reportPath, String pieChartFileName) {
-        File reportFile = new File(reportPath);
+    File reportFile = new File(reportPath);
 
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(reportFile))) {
-            writer.write("<!DOCTYPE html><html><head><title>Steganography Detection Report</title></head><body>");
-            writer.write("<h1>Steganography Detection Report</h1>");
-            writer.write("<p>Generated on: " + new Date().toString() + "</p>");
-            writer.write("<h2>Summary</h2>");
-            writer.write("<p>Total files processed: " + totalFilesProcessed + "</p>");
-            writer.write("<p>Files suspected of containing steganography: " + suspectedFilesCount + "</p>");
-            writer.write("<h2>Detail</h2><ul>");
-            for (SuspectedFile file : suspectedFiles) {
-                writer.write("<li>" + file.getFilePath() + " - Method: " + file.getDetectionMethod());
-            }
-            writer.write("</ul>");
-            writer.write("<img src='" + pieChartFileName + "' alt='Pie Chart'/>");
-            writer.write("</body></html>");
-        } catch (IOException e) {
-            logger.log(Level.SEVERE, "Error generating HTML report", e);
+    try (BufferedWriter writer = new BufferedWriter(new FileWriter(reportFile))) {
+        writer.write("<!DOCTYPE html><html><head><title>Steganography Detection Report</title>");
+        // Adding some basic CSS
+        writer.write("<style>");
+        writer.write("body { font-family: Arial, sans-serif; margin: 40px; }");
+        writer.write("h1, h2 { color: navy; }");
+        writer.write("p { font-size: 16px; }");
+        writer.write("ul { background-color: #f8f8f8; padding: 20px; }");
+        writer.write("li { margin: 10px 0; }");
+        writer.write("img { display: block; margin-top: 20px; max-width: 100%; height: auto; border: 1px solid #ccc; padding: 5px; }");
+        writer.write("</style>");
+        writer.write("</head><body>");
+        writer.write("<h1>Steganography Detection Report</h1>");
+        writer.write("<p>Generated on: " + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()) + "</p>");
+        writer.write("<h2>Summary</h2>");
+        writer.write("<p>Total files processed: " + totalFilesProcessed + "</p>");
+        writer.write("<p>Files suspected of containing steganography: " + suspectedFilesCount + "</p>");
+        writer.write("<img src='" + pieChartFileName + "' alt='Pie Chart'/>");
+        writer.write("<h2>File name detected:</h2><ul>");
+        for (SuspectedFile file : suspectedFiles) {
+            writer.write("<li>" + file.getFilePath() + " - Method: " + file.getDetectionMethod() + "</li>");
         }
+        writer.write("</ul>");
+        writer.write("</body></html>");
+    } catch (IOException e) {
+        logger.log(Level.SEVERE, "Error generating HTML report", e);
     }
+}
+
+
 
     private void generatePieChart(String imagePath) throws IOException {
         PieDataset dataset = createDataset();
@@ -295,5 +317,7 @@ private String getFilePathSafe(AbstractFile file) {
         return "Unavailable";
     }
 }
+
+
 
 }
