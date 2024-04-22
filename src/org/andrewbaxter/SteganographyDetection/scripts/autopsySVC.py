@@ -6,11 +6,13 @@ from joblib import load as joblib_load
 import imageio.v2 as imageio
 import sys
 
-# Load your trained model and scaler
-model_path = "C:\\Users\\andre\\Dropbox\\My PC (LAPTOP-50HMEA5E)\\Documents\\4thyearCollege\\Sem2Project\\NetBeansProject-SVC\\SteganographyDetectionSVC\\src\\org\\andrewbaxter\\SteganographyDetection\\models\\SVC_model.pkl"
-scaler_path = "C:\\Users\\andre\\Dropbox\\My PC (LAPTOP-50HMEA5E)\\Documents\\4thyearCollege\\Sem2Project\\NetBeansProject-SVC\\SteganographyDetectionSVC\\src\\org\\andrewbaxter\\SteganographyDetection\\models\\scaler.joblib"
+model_path = os.path.join(os.path.dirname(__file__), '..', 'models', 'SVC_model.pkl')
+scaler_path = os.path.join(os.path.dirname(__file__), '..', 'models', 'scaler.joblib')
 
+
+print(f"Model path: {model_path}")
 model = joblib_load(model_path)
+
 scaler = joblib_load(scaler_path)
 
 def process_dng(image_path):
