@@ -11,16 +11,15 @@ package org.andrewbaxter.SteganographyDetection;
 public class SuspectedFile {
     private final String filePath;
     private final String detectionMethod;
-    private final double confidenceLevel;
 
-    public SuspectedFile(String filePath, String detectionMethod, double confidenceLevel) {
+    public SuspectedFile(String filePath, String detectionMethod) {
         this.filePath = filePath;
         this.detectionMethod = detectionMethod;
-        this.confidenceLevel = confidenceLevel;
+
     }
 
     // Getters
     public String getFilePath() { return filePath; }
     public String getDetectionMethod() { return detectionMethod; }
-    public double getConfidenceLevel() { return confidenceLevel; }
+
 }

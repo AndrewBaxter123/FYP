@@ -52,8 +52,15 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartUtilities; // Note: In newer versions, this might be ChartUtils
@@ -69,90 +76,50 @@ public class SteganographyDetectionFileIngestModule implements FileIngestModule 
     private int suspectedFilesCount = 0;
     private List<SuspectedFile> suspectedFiles = new ArrayList<>();  // List to hold suspected files
 
-    
-    // Placeholder values for detection method and confidence score
-    String detectionMethod = "Placeholder Method";
-    double confidenceScore = 0.97; // Placeholder confidence score
-
     @Override
     public void startUp(IngestJobContext ijc) throws IngestModuleException {
-        // Perform any initialization here
         logger.log(Level.INFO, "SteganographyDetectionFileIngestModule starting up");
     }
-    
-@Override
-public void shutDown() {
-    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd_HHmmss");
-    String timestamp = dateFormat.format(new Date());
 
-    String pieChartFileName = "pieChart_" + timestamp + ".png";
-    String pieChartImagePath = Case.getCurrentCase().getExportDirectory() + File.separator + pieChartFileName;
+    @Override
+    public void shutDown() {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd_HHmmss");
+        String timestamp = dateFormat.format(new Date());
+        String pieChartFileName = "pieChart_" + timestamp + ".png";
+        String pieChartImagePath = Case.getCurrentCase().getExportDirectory() + File.separator + pieChartFileName;
+        String reportFileName = "SteganographyDetectionReport_" + timestamp + ".html";
+        String reportPath = Case.getCurrentCase().getExportDirectory() + File.separator + reportFileName;
 
-    String reportFileName = "SteganographyDetectionReport_" + timestamp + ".html";
-    String reportPath = Case.getCurrentCase().getExportDirectory() + File.separator + reportFileName;
-
-    try {
-        generatePieChart(pieChartImagePath);
-        generateReport(reportPath, pieChartFileName); // Pass the filename to the generateReport method
-    } catch (IOException ex) {
-        Exceptions.printStackTrace(ex);
-    }
-
-    logger.log(Level.INFO, "SteganographyDetectionFileIngestModule shutting down");
-}
-
-
-
-    
-    private boolean placeholderDetectSteganography(AbstractFile file) {
-    return Math.random() > 0.97; // 5% chance to mark a file as suspected
-}
-    
-@Override
-public ProcessResult process(AbstractFile file) {
-    // Placeholder logic for steganography detection
-    boolean isSuspected = placeholderDetectSteganography(file);
-    totalFilesProcessed++;  // Increment for every file processed
-
-    if (isSuspected) {
-        suspectedFilesCount++;  // Increment when steganography is suspected
-
-        String uniquePath;
         try {
-            uniquePath = file.getUniquePath();
-        } catch (TskCoreException e) {
-            logger.log(Level.SEVERE, "Could not get unique path for file " + file.getName(), e);
-            // Decide how to handle the error. For example, skip this file:
-            return ProcessResult.OK;
+            generatePieChart(pieChartImagePath);
+            generateReport(reportPath, pieChartFileName);
+        } catch (IOException ex) {
+            Exceptions.printStackTrace(ex);
         }
 
-        // Placeholder values for detection method and confidence score
-        String detectionMethod = "LSB";  // This should eventually be the actual detection method used
-        double confidenceScore = 0.95;   // And the actual confidence score obtained
+        logger.log(Level.INFO, "SteganographyDetectionFileIngestModule shutting down");
+    }
 
-        // Create a suspected file object and add it to the list
-        SuspectedFile suspectedFile = new SuspectedFile(uniquePath, detectionMethod, confidenceScore);
-        suspectedFiles.add(suspectedFile);
+    @Override
+public ProcessResult process(AbstractFile file) {
+    List<String> supportedExtensions = Arrays.asList(".png", ".jpg", ".jpeg", ".dng", ".pgm", ".bmp", ".gif");
+    String fileName = file.getName().toLowerCase();
+    boolean isSupportedType = false;
 
-        try {
-            // Log detected steganography
-            logger.log(Level.INFO, "Steganography suspected in {0}", uniquePath);
+    for (String extension : supportedExtensions) {
+        if (fileName.endsWith(extension)) {
+            isSupportedType = true;
+            break;
+        }
+    }
 
-            // Add artifact to the Blackboard
-            addArtifactToBlackboard(file, detectionMethod, confidenceScore);
+    if (isSupportedType) {
+        boolean isSuspected = detectSteganographyUsingSVC(file);
+        totalFilesProcessed++;  // Increment for every file processed
 
-            // Tag the file as suspected of containing steganography
-            tagFile(file, "Suspected Steganography");
-
-            // Send ingest message
-            String title = "Steganography Suspected";
-            String detailMessage = "Steganography suspected in file: " + file.getName() +
-                                   " using method " + detectionMethod +
-                                   " with confidence score " + confidenceScore;
-            sendIngestMessage(title, detailMessage);
-
-        } catch (TagsManager.TagNameAlreadyExistsException ex) {
-            Exceptions.printStackTrace(ex);
+        if (isSuspected) {
+            suspectedFilesCount++;  // Increment if steganography is suspected
+            sendIngestMessage(file, isSuspected); // Send detailed message if steganography is detected
         }
     }
 
@@ -160,165 +127,173 @@ public ProcessResult process(AbstractFile file) {
 }
 
 
-
-
-private void addArtifactToBlackboard(AbstractFile file, String detectionMethod, double confidenceScore) {
-    try {
-        BlackboardArtifact artifact = file.newArtifact(BlackboardArtifact.ARTIFACT_TYPE.TSK_INTERESTING_FILE_HIT);
-        
-        BlackboardAttribute methodAttribute = new BlackboardAttribute(
-            BlackboardAttribute.ATTRIBUTE_TYPE.TSK_COMMENT,
-            "SteganographyDetection",
-            "Detection Method: " + detectionMethod
-        );
-        
-        BlackboardAttribute confidenceAttribute = new BlackboardAttribute(
-        BlackboardAttribute.ATTRIBUTE_TYPE.TSK_COMMENT,
-        "SteganographyDetection",
-        "Confidence Score: " + String.format("%.2f", confidenceScore) 
-        );
-        
-        artifact.addAttribute(methodAttribute);
-        artifact.addAttribute(confidenceAttribute);
-
-        // Post the artifact to the Blackboard for review
-        Case.getCurrentCaseThrows().getSleuthkitCase().getBlackboard().postArtifact(artifact, "SteganographyDetection");
-        
-        
-    } catch (TskCoreException | NoCurrentCaseException | BlackboardException e) {
-        logger.log(Level.SEVERE, "Error adding artifact to the blackboard", e);
-    }
-}
-
-
-private void tagFile(AbstractFile file, String tagName) throws TagsManager.TagNameAlreadyExistsException {
-    try {
-        Case currentCase = Case.getCurrentCaseThrows();
-        TagsManager tagsManager = currentCase.getServices().getTagsManager();
-        
-        TagName tag = null;
-        List<TagName> existingTags = tagsManager.getAllTagNames();
-        for (TagName existingTag : existingTags) {
-            if (existingTag.getDisplayName().equalsIgnoreCase(tagName)) {
-            tag = existingTag;
-            break;
-            }
+    private void addArtifactToBlackboard(AbstractFile file) {
+        try {
+            BlackboardArtifact artifact = file.newArtifact(BlackboardArtifact.ARTIFACT_TYPE.TSK_INTERESTING_FILE_HIT);
+            BlackboardAttribute methodAttribute = new BlackboardAttribute(
+                BlackboardAttribute.ATTRIBUTE_TYPE.TSK_COMMENT,
+                "SteganographyDetection",
+                "Detection Method: SVC Model"
+            );
+            artifact.addAttribute(methodAttribute);
+            Case.getCurrentCaseThrows().getSleuthkitCase().getBlackboard().postArtifact(artifact, "SteganographyDetection");
+        } catch (TskCoreException | NoCurrentCaseException | BlackboardException e) {
+            logger.log(Level.SEVERE, "Error adding artifact to the blackboard", e);
         }
-        if (tag == null) {
-            tag = tagsManager.addTagName(tagName, "Suspected steganography", TagName.HTML_COLOR.RED);
-}
-
-    // Add the tag with a comment
-    tagsManager.addContentTag(file, tag, "Steganography detection plugin flagged this file.");
-
-    } catch (TskCoreException | NoCurrentCaseException e) {
-        logger.log(Level.SEVERE, "Error tagging file", e);
     }
-}
+
+    private void tagFile(AbstractFile file, String tagName) throws TagsManager.TagNameAlreadyExistsException {
+        try {
+            Case currentCase = Case.getCurrentCaseThrows();
+            TagsManager tagsManager = currentCase.getServices().getTagsManager();
+            TagName tag = null;
+            List<TagName> existingTags = tagsManager.getAllTagNames();
+            for (TagName existingTag : existingTags) {
+                if (existingTag.getDisplayName().equalsIgnoreCase(tagName)) {
+                    tag = existingTag;
+                    break;
+                }
+            }
+            if (tag == null) {
+                tag = tagsManager.addTagName(tagName, "Suspected steganography", TagName.HTML_COLOR.RED);
+            }
+            tagsManager.addContentTag(file, tag, "Steganography detection plugin flagged this file.");
+        } catch (TskCoreException | NoCurrentCaseException e) {
+            logger.log(Level.SEVERE, "Error tagging file", e);
+        }
+    }
 
 
-private void sendIngestMessage(String title, String message) {
+
+
+    private void generateReport(String reportPath, String pieChartFileName) {
+        File reportFile = new File(reportPath);
+
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(reportFile))) {
+            writer.write("<!DOCTYPE html><html><head><title>Steganography Detection Report</title></head><body>");
+            writer.write("<h1>Steganography Detection Report</h1>");
+            writer.write("<p>Generated on: " + new Date().toString() + "</p>");
+            writer.write("<h2>Summary</h2>");
+            writer.write("<p>Total files processed: " + totalFilesProcessed + "</p>");
+            writer.write("<p>Files suspected of containing steganography: " + suspectedFilesCount + "</p>");
+            writer.write("<h2>Detail</h2><ul>");
+            for (SuspectedFile file : suspectedFiles) {
+                writer.write("<li>" + file.getFilePath() + " - Method: " + file.getDetectionMethod());
+            }
+            writer.write("</ul>");
+            writer.write("<img src='" + pieChartFileName + "' alt='Pie Chart'/>");
+            writer.write("</body></html>");
+        } catch (IOException e) {
+            logger.log(Level.SEVERE, "Error generating HTML report", e);
+        }
+    }
+
+    private void generatePieChart(String imagePath) throws IOException {
+        PieDataset dataset = createDataset();
+        JFreeChart chart = ChartFactory.createPieChart(
+            "Steganography Detection Summary",
+            dataset,
+            true,
+            true,
+            false);
+        ChartUtilities.saveChartAsPNG(new File(imagePath), chart, 500, 300);
+    }
+
+    private PieDataset createDataset() {
+        DefaultPieDataset dataset = new DefaultPieDataset();
+        dataset.setValue("Files with Steganography", suspectedFilesCount);
+        dataset.setValue("Other Files", totalFilesProcessed - suspectedFilesCount);
+        return dataset;
+    }
+
+    private boolean detectSteganographyUsingSVC(AbstractFile file) {
+        boolean stegoDetected = false;
+        String pythonScriptPath = getPythonScriptPath();
+        if (pythonScriptPath == null) {
+            logger.log(Level.SEVERE, "Python script path is incorrect or script does not exist.");
+            return false;
+        }
+
+        String filePath = file.getLocalAbsPath();
+        if (filePath == null || filePath.isEmpty()) {
+            logger.log(Level.SEVERE, "File path is null or empty for file: " + file.getName());
+            return false;
+        }
+
+        try {
+            ProcessBuilder processBuilder = new ProcessBuilder("python", pythonScriptPath, filePath);
+            processBuilder.redirectErrorStream(true);
+            Process process = processBuilder.start();
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    if (line.contains("Steganography Detected: Yes")) {
+                        stegoDetected = true;
+                    }
+                    logger.log(Level.INFO, line);
+                }
+            }
+            int exitCode = process.waitFor();
+            if (exitCode != 0) {
+                logger.log(Level.WARNING, "Python script exited with code " + exitCode);
+            }
+        } catch (IOException | InterruptedException e) {
+            logger.log(Level.SEVERE, "Error running steganography detection script", e);
+        }
+        return stegoDetected;
+    }
+
+    private String getPythonScriptPath() {
+        String currentDir = System.getProperty("user.dir");
+        String scriptRelativePath = "src/org/andrewbaxter/SteganographyDetection/scripts/autopsySVC.py";
+        String scriptPath = currentDir + File.separator + scriptRelativePath;
+        File scriptFile = new File(scriptPath);
+        if (scriptFile.exists()) {
+            return scriptFile.getAbsolutePath();
+        } else {
+            logger.log(Level.SEVERE, "Python script file does not exist at the specified path: " + scriptPath);
+            return null;
+        }
+    }
+
+private void sendIngestMessage(AbstractFile file, boolean isSuspected) {
+    if (!isSuspected) {
+        return; // Only send messages for suspected steganography cases
+    }
+
+    String title = "🚨 Steganography Detected! 🚨";
+    String detailMessage = "<html>"
+            + "<h2>Steganography Detection Notification</h2>"
+            + "<p><strong>File Information:</strong><br>"
+            + "- File Name: " + file.getName() + "<br>"
+            + "- Detected On: " + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()) + "<br>"
+            + "- File Location: " + getFilePathSafe(file) + "<br>"
+            + "- Detection Method: Support Vector Machine (SVM)</p>"
+            + "<p><strong>Action Required:</strong><br>"
+            + "1. Verify the detection by reviewing the file.<br>"
+            + "2. Report this detection to your IT security team for further investigation.<br>"
+            + "3. Follow established security procedures related to steganography findings.</p>"
+            + "<p><strong>What is Steganography?</strong><br>"
+            + "Steganography involves embedding secret data within non-secret files. Detecting such files is crucial for preventing unauthorized information leaks.</p>"
+            + "<p><strong>Extra Steps?</strong><br>"
+            + "<p>Use an online tool to extract the payload, ZSteg for example.</p>"
+            + "</html>";
+
     IngestServices.getInstance().postMessage(IngestMessage.createMessage(
-        IngestMessage.MessageType.INFO, // or WARNING/ERROR
-        "SteganographyDetection",
-        title,
-        message
+            IngestMessage.MessageType.INFO,  // You can use WARNING or ERROR if appropriate
+            "SteganographyDetection",
+            title,
+            detailMessage
     ));
 }
 
-private void generateReport(String reportPath, String pieChartFileName) {
-    // Change the file extension to .html
-    File reportFile = new File(reportPath.replace(".txt", ".html"));
-
-    try (BufferedWriter writer = new BufferedWriter(new FileWriter(reportFile))) {
-        // Start of the HTML document
-        writer.write("<!DOCTYPE html><html><head><title>Steganography Detection Report</title></head><body>");
-        writer.write("<h1>Steganography Detection Report</h1>");
-        writer.write("<p>Generated on: " + new Date().toString() + "</p>");
-
-        // Summary section
-        writer.write("<h2>Summary</h2>");
-        writer.write("<p>Total files processed: " + totalFilesProcessed + "</p>");
-        writer.write("<p>Files suspected of containing steganography: " + suspectedFilesCount + "</p>");
-
-        // Detailed list of suspected files
-        writer.write("<h2>Detail</h2><ul>");
-        for (SuspectedFile file : suspectedFiles) {
-            writer.write("<li>" + file.getFilePath() + " - Method: " + file.getDetectionMethod() + ", Confidence: " + file.getConfidenceLevel() + "</li>");
-        }
-        writer.write("</ul>");
-
-        // Embedding the pie chart image (make sure the image path is accessible from where the HTML will be opened)
-        writer.write("<img src='" + pieChartFileName + "' alt='Pie Chart'/>");
-
-        // End of the HTML document
-        writer.write("</body></html>");
-    } catch (IOException e) {
-        logger.log(Level.SEVERE, "Error generating HTML report", e);
+private String getFilePathSafe(AbstractFile file) {
+    try {
+        return file.getUniquePath();
+    } catch (TskCoreException e) {
+        logger.log(Level.SEVERE, "Could not get unique path for file " + file.getName(), e);
+        return "Unavailable";
     }
 }
 
-
-private void generatePieChart(String imagePath) throws IOException {
-    // Create a dataset for the pie chart
-    PieDataset dataset = createDataset();
-
-    // Create a chart
-    JFreeChart chart = ChartFactory.createPieChart(
-            "Steganography Detection Summary",   // chart title
-            dataset,          // dataset
-            true,             // include legend
-            true,
-            false);
-
-    // Save the chart as a PNG file
-    ChartUtilities.saveChartAsPNG(new File(imagePath), chart, 500, 300);
 }
-
-private PieDataset createDataset() {
-    DefaultPieDataset dataset = new DefaultPieDataset();
-    dataset.setValue("Files with Steganography", suspectedFilesCount);
-    dataset.setValue("Other Files", totalFilesProcessed - suspectedFilesCount);
-    return dataset;
-}
-
-
-
-
-    private boolean detectSteganography(AbstractFile file) {
-    // Implement your steganography detection logic here
-    // You can access the content of the file using file.readContent()
-    
-    // Example: Call LSB script
-    boolean lsbResult = detectSteganographyUsingLSB(file);
-
-    // Example: Call machine learning model
-    boolean machineLearningResult = detectSteganographyUsingML(file);
-
-    // Example: Call deep learning model
-    boolean deepLearningResult = detectSteganographyUsingDL(file);
-
-    // Combine results based on your specific requirements
-    // For example, return true if at least one method detects steganography
-    return lsbResult || machineLearningResult || deepLearningResult;
-}
-
-private boolean detectSteganographyUsingLSB(AbstractFile file) {
-    // Implement LSB steganography detection logic
-    // Return true if steganography is detected, false otherwise
-    return false;
-}
-
-private boolean detectSteganographyUsingML(AbstractFile file) {
-    // Implement machine learning steganography detection logic
-    // Return true if steganography is detected, false otherwise
-    return false;
-}
-
-private boolean detectSteganographyUsingDL(AbstractFile file) {
-    // Implement deep learning steganography detection logic
-    // Return true if steganography is detected, false otherwise
-    return false;
-}
-
-}    
