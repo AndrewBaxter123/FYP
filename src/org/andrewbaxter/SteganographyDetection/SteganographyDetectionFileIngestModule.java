@@ -25,7 +25,15 @@ detectSteganography method: A private method where you should implement your ste
  * 
  */
 
-
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.URI;
+import java.net.URL;
+import java.util.logging.Level;
 import java.util.List;
 import java.util.Optional;
 import java.util.logging.Level;
@@ -265,18 +273,66 @@ public ProcessResult process(AbstractFile file) {
         return stegoDetected;
     }
 
-    private String getPythonScriptPath() {
-        String currentDir = System.getProperty("user.dir");
-        String scriptRelativePath = "src/org/andrewbaxter/SteganographyDetection/scripts/autopsySVC.py";
-        String scriptPath = currentDir + File.separator + scriptRelativePath;
-        File scriptFile = new File(scriptPath);
-        if (scriptFile.exists()) {
-            return scriptFile.getAbsolutePath();
-        } else {
-            logger.log(Level.SEVERE, "Python script file does not exist at the specified path: " + scriptPath);
+//    private String getPythonScriptPath() {
+//        String currentDir = System.getProperty("user.dir");
+//        String scriptRelativePath = "src/org/andrewbaxter/SteganographyDetection/scripts/autopsySVC.py";
+//        String scriptPath = currentDir + File.separator + scriptRelativePath;
+//        File scriptFile = new File(scriptPath);
+//        if (scriptFile.exists()) {
+//            return scriptFile.getAbsolutePath();
+//        } else {
+//            logger.log(Level.SEVERE, "Python script file does not exist at the specified path: " + scriptPath);
+//            return null;
+//        }
+//    }
+
+private String getPythonScriptPath() {
+    try {
+        // Get the URL of the Python script as a resource inside the JAR or file system
+        URL scriptUrl = getClass().getResource("/org/andrewbaxter/SteganographyDetection/scripts/autopsySVC.py");
+        if (scriptUrl == null) {
+            logger.log(Level.SEVERE, "Python script file does not exist within the JAR or project");
             return null;
         }
+        
+        // Convert the URL to a URI to handle spaces and special characters in path
+        URI scriptUri = scriptUrl.toURI();
+        
+        // Check if the resource is in a JAR or a file on the filesystem
+        if ("jar".equalsIgnoreCase(scriptUri.getScheme())) {
+            // Extract the script to a temporary file to execute it
+            return extractScriptToTempFile(scriptUrl).getAbsolutePath();
+        } else {
+            // Otherwise, the script can be accessed directly
+            return new File(scriptUri).getAbsolutePath();
+        }
+    } catch (URISyntaxException ex) {
+        logger.log(Level.SEVERE, "Error handling script URI", ex);
+        return null;
+    } catch (IOException ex) {
+        logger.log(Level.SEVERE, "Error extracting script", ex);
+        return null;
     }
+}
+
+private File extractScriptToTempFile(URL resourceUrl) throws IOException {
+    // Create a temporary file
+    File tempFile = File.createTempFile("autopsySVC", ".py");
+    tempFile.deleteOnExit(); // Ensure the file is deleted when the JVM exits
+
+    // Copy the resource content to the temporary file
+    try (InputStream in = resourceUrl.openStream();
+         OutputStream out = new FileOutputStream(tempFile)) {
+        byte[] buffer = new byte[4096];
+        int bytesRead;
+        while ((bytesRead = in.read(buffer)) != -1) {
+            out.write(buffer, 0, bytesRead);
+        }
+    }
+
+    return tempFile;
+}
+
 
 private void sendIngestMessage(AbstractFile file, boolean isSuspected) {
     if (!isSuspected) {
