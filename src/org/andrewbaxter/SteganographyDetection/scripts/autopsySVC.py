@@ -9,8 +9,7 @@ import logging
 
 # Setup basic logging
 log_directory = os.path.join(os.environ.get('APPDATA'), 'SteganographyDetection')
-if not os.path.exists(log_directory):
-    os.makedirs(log_directory)  # Ensure the directory exists
+os.makedirs(log_directory, exist_ok=True)  # Ensure the directory exists even if it already exists
 log_file_path = os.path.join(log_directory, 'application.log')
 logging.basicConfig(filename=log_file_path, level=logging.INFO, format='%(asctime)s:%(levelname)s:%(message)s')
 
