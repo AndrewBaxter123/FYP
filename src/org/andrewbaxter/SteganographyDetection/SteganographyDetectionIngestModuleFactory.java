@@ -41,12 +41,12 @@ public class SteganographyDetectionIngestModuleFactory extends IngestModuleFacto
 
     @Override
     public String getModuleDisplayName() {
-        return "Steganography Detection";
+        return "StegCatcher";
     }
 
     @Override
     public String getModuleDescription() {
-        return "Detects steganography in image files.";
+        return "Detects LSB steganography in image files.";
     }
 
     @Override
